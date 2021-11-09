@@ -11,37 +11,41 @@ abstract Case(CaseObject) from CaseObject to CaseObject {
 }
 
 interface CaseObject {
-	var suite:Suite;
-	var info:CaseInfo;
-	var timeout:Int;
-	var include:Bool;
-	var exclude:Bool;
-	var pos:PosInfos;
+	final info:CaseInfo;
+	final timeout:Int;
+	final include:Bool;
+	final exclude:Bool;
+	final pos:PosInfos;
 	function execute():Assertions;
 }
 
 typedef CaseInfo = {
-	name:String,
-	description:String,
-	pos:PosInfos,
+	final name:String;
+	final description:String;
+	final pos:PosInfos;
 }
 
 class BasicCase implements CaseObject {
-	public var suite:Suite;
-	public var info:CaseInfo;
-	public var timeout:Int = 5000;
-	public var include:Bool = false;
-	public var exclude:Bool = false;
-	public var pos:PosInfos = null;
-	
-	public function new(?pos:PosInfos) {
+	public final info:CaseInfo;
+	public final timeout:Int = 5000;
+	public final include:Bool = false;
+	public final exclude:Bool = false;
+	public final pos:PosInfos = null;
+
+	public function new(?options:{ ?include:Bool, ?exclude:Bool, ?timeout:Int }, ?pos:PosInfos) {
+		if (options != null) {
+			include = !!options.include;
+			exclude = !!options.exclude;
+			if (options.timeout != null)
+				timeout = options.timeout;
+		}
 		info = {
 			name: Type.getClassName(Type.getClass(this)),
 			description: null,
 			pos: pos,
 		}
 	}
-	
+
 	public function execute():Assertions {
 		return [].iterator();
 	}

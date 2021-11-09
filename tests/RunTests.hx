@@ -12,18 +12,18 @@ using Lambda;
 
 class RunTests {
 	static function main() {
-		
+
 		var code = 0;
-		
+
 		function assertEquals<T>(expected:T, actual:T, ?pos:haxe.PosInfos) {
 			if(expected != actual) {
 				println('${pos.fileName}:${pos.lineNumber}: Expected $expected but got $actual ');
 				code++;
 			}
 		}
-		
+
 		var futures = [];
-		
+
 		// Test: cast from single case
 		var single = new SingleCase();
 		futures.push(
@@ -32,11 +32,11 @@ class RunTests {
 				return Noise;
 			})
 		);
-		
+
 		// Test: cast from multiple cases
 		futures.push(
 			function() return Runner.run([
-				single, 
+				single,
 				new FutureCase(),
 				new PromiseCase(),
 				new SurpriseCase(),
@@ -48,7 +48,7 @@ class RunTests {
 				return Noise;
 			})
 		);
-		
+
 		// Test: empty suite (reporter should not print the empty suite)
 		var reporter = new MemoryReporter();
 		futures.push(
@@ -76,7 +76,7 @@ class RunTests {
 				return Noise;
 			})
 		);
-		
+
 		// Test: after/teardown should be run even if case errored
 		var suite = new ActionSuite({name: 'ErrorSuite'}, [
 			new ErrorCase(),
@@ -90,7 +90,7 @@ class RunTests {
 				return Noise;
 			})
 		);
-		
+
 		var iter = futures.iterator();
 		function next() {
 			if(iter.hasNext()) iter.next()().handle(next);
@@ -140,8 +140,7 @@ class SurprisesCase extends BasicCase {
 }
 class ExcludedCase extends BasicCase {
 	public function new() {
-		super();
-		exclude = true;
+		super({ exclude: true });
 	}
 	override function execute():Assertions {
 		return new Assertion(true, 'Dummy');
@@ -155,7 +154,7 @@ class ErrorCase extends BasicCase {
 
 class ActionSuite extends BasicSuite {
 	public var actions:Array<String> = [];
-	
+
 	override function setup() {
 		actions.push('setup');
 		return Promise.NOISE;
@@ -175,11 +174,11 @@ class ActionSuite extends BasicSuite {
 }
 
 class MemoryReporter implements Reporter {
-	
+
 	public var logs:Array<ReportType> = [];
-	
+
 	public function new() {}
-	
+
 	public function report(type:ReportType):Future<Noise> {
 		logs.push(type);
 		return Future.NOISE;
