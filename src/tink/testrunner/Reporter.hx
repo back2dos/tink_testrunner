@@ -9,7 +9,7 @@ using Lambda;
 using StringTools;
 
 interface Reporter {
-	function report(type:ReportType):Future<Noise>; // reporter cannot fail, so it won't ruin the test
+	function report(type:ReportType):Void;
 }
 
 enum ReportType {
@@ -35,7 +35,7 @@ interface Formatter {
 
 class BasicFormatter implements Formatter {
 	public function new() {}
-	
+
 	public function success(v:String):String return color(v, 'green');
 	public function error(v:String):String return color(v, 'red');
 	public function warning(v:String):String return color(v, 'yellow');
@@ -66,7 +66,7 @@ class BasicReporter implements Reporter {
 	static var inited = false;
 	#end
 	var formatter:Formatter;
-	
+
 	public function new(?formatter) {
 		#if (ansi && (sys || nodejs))
 		if(!inited) {
@@ -97,7 +97,7 @@ class BasicReporter implements Reporter {
 
 	#if (ansi && (sys || nodejs))
 	static function init() {
-		if(Sys.systemName() == 'Windows') { 
+		if(Sys.systemName() == 'Windows') {
 			// HACK: use the "ANSICON" env var to force enable ANSI if running in PowerShell
 			var value = Sys.getEnv('PSModulePath');
 			var isPowerShell = value != null && value.split(';').length >= 3;
@@ -107,8 +107,8 @@ class BasicReporter implements Reporter {
 		}
 	}
 	#end
-	
-	public function report(type:ReportType):Future<Noise> {
+
+	public function report(type:ReportType) {
 		switch type {
 			case BatchStart:
 				reportBatchStart();
@@ -125,7 +125,6 @@ class BasicReporter implements Reporter {
 			case BatchFinish(result):
 				reportBatchFinish(result);
 		}
-		return Future.NOISE;
 	}
 
 	function reportBatchStart() {}
@@ -239,7 +238,7 @@ class BasicReporter implements Reporter {
 		#else
 			throw "Not supported yet";
 		#end
-	
+
 	function indent(v:String, i = 0, skipFirst = false) {
 		var prefix = ''.lpad(' ', i);
 		var ret = v.split('\n')
@@ -247,7 +246,7 @@ class BasicReporter implements Reporter {
 			.join('\n');
 		return skipFirst ? ret.substr(i) : ret;
 	}
-	
+
 	function formatError(e:Error) {
 		var str = e.toString();
 		if(e.data != null) str += '\n' + Std.string(e.data);

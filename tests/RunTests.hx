@@ -1,7 +1,7 @@
 package;
 
 import tink.testrunner.*;
-import tink.testrunner.Assertion.*;
+import tink.streams.Stream;
 import tink.testrunner.Case;
 import tink.testrunner.Suite;
 import tink.testrunner.Reporter;
@@ -103,38 +103,67 @@ class RunTests {
 	}
 }
 
+abstract class BasicCase implements CaseObject {
+	public final info:CaseInfo;
+	public final timeout:Int = 5000;
+	public final include:Bool = false;
+	public final exclude:Bool = false;
+	public final pos:haxe.PosInfos = null;
+
+	public function new(?options:{ ?include:Bool, ?exclude:Bool, ?timeout:Int }, ?pos:haxe.PosInfos) {
+		if (options != null) {
+			include = !!options.include;
+			exclude = !!options.exclude;
+			if (options.timeout != null)
+				timeout = options.timeout;
+		}
+		info = {
+			name: Type.getClassName(Type.getClass(this)),
+			description: null,
+			pos: pos,
+		}
+	}
+
+	abstract function getAssertions():Assertions;
+	public function execute(report:Assertion->Void):Promise<Noise>
+		return getAssertions().forEach(a -> { report(a); Resume; }).next(c -> switch c {
+			case Failed(error): error;
+			default: Noise;
+		});
+}
+
 class SingleCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return new Assertion(true, 'Dummy');
 	}
 }
 class FutureCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return Future.sync(new Assertion(true, 'Dummy'));
 	}
 }
 class PromiseCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return (new Assertion(true, 'Dummy'):Promise<Assertion>);
 	}
 }
 class SurpriseCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return Future.sync(Success(new Assertion(true, 'Dummy')));
 	}
 }
 class FuturesCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return Future.sync((new Assertion(true, 'Dummy'):Assertions));
 	}
 }
 class PromisesCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return ((new Assertion(true, 'Dummy'):Assertions):Promise<Assertions>);
 	}
 }
 class SurprisesCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return Future.sync(Success((new Assertion(true, 'Dummy'):Assertions)));
 	}
 }
@@ -142,12 +171,12 @@ class ExcludedCase extends BasicCase {
 	public function new() {
 		super({ exclude: true });
 	}
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return new Assertion(true, 'Dummy');
 	}
 }
 class ErrorCase extends BasicCase {
-	override function execute():Assertions {
+	function getAssertions():Assertions {
 		return Failure(new Error('Errored'));
 	}
 }
@@ -179,8 +208,7 @@ class MemoryReporter implements Reporter {
 
 	public function new() {}
 
-	public function report(type:ReportType):Future<Noise> {
+	public function report(type:ReportType) {
 		logs.push(type);
-		return Future.NOISE;
 	}
 }
