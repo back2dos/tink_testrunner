@@ -1,6 +1,7 @@
 package tink.testrunner;
 
 import tink.testrunner.Case;
+import haxe.ds.ReadOnlyArray;
 import haxe.PosInfos;
 
 using tink.CoreApi;
@@ -50,13 +51,13 @@ abstract Suite(SuiteObject) from SuiteObject to SuiteObject {
 }
 
 typedef SuiteInfo = {
-	name:String,
-	?pos:PosInfos,
+	final name:String;
+	final ?pos:PosInfos;
 }
 
 interface SuiteObject {
-	var info:SuiteInfo;
-	var cases:Array<Case>;
+	final info:SuiteInfo;
+	final cases:ReadOnlyArray<Case>;
 	function setup():Promise<Noise>;
 	function before():Promise<Noise>;
 	function after():Promise<Noise>;
@@ -64,13 +65,15 @@ interface SuiteObject {
 }
 
 class BasicSuite implements SuiteObject {
-	public var info:SuiteInfo;
-	public var cases:Array<Case>;
+	public final info:SuiteInfo;
+	public final cases:ReadOnlyArray<Case>;
 
 	public function new(info:SuiteInfo, cases, ?pos:haxe.PosInfos) {
-		this.info = info;
+		this.info = switch info.pos {
+			case null: { name: info.name, pos: pos };
+			default: info;
+		};
 		this.cases = cases;
-		if(info.pos == null) info.pos = pos;
 	}
 
 	public function setup() return Promise.NOISE;
