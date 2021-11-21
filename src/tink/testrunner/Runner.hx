@@ -35,7 +35,7 @@ class Runner {
 			}
 		}
 
-		return Future #if (tink_core >= "2") .irreversible #else .async #end(function(cb) {
+		return Future.irreversible(function(cb) {
 			reporter.report(BatchStart);
 			var iter = batch.suites.iterator(),
 					results:BatchResult = [];
@@ -59,7 +59,7 @@ class Runner {
 
 
 	static function runSuite(suite:Suite, reporter:Reporter, timers:TimerManager, includeMode:Bool):Future<SuiteResult> {
-		return Future #if (tink_core >= "2") .irreversible #else .async #end(function(cb) {
+		return Future.irreversible(function(cb) {
 			var cases = suite.getCasesToBeRun(includeMode);
 			var hasCases = cases.length > 0;
 			reporter.report(SuiteStart(suite.info, hasCases));
@@ -94,7 +94,7 @@ class Runner {
 	}
 
 	static function runCase(caze:Case, suite:Suite, reporter:Reporter, timers:TimerManager, shouldRun:Bool):Future<CaseResult> {
-		return Future #if (tink_core >= "2") .irreversible #else .async #end(function(cb) {
+		return Future.irreversible(function(cb) {
 			if(shouldRun) {
 				reporter.report(CaseStart(caze.info, shouldRun));
 				suite.before().timeout(caze.timeout, timers, caze.pos)
@@ -135,7 +135,7 @@ class Runner {
 
 class TimeoutHelper {
 	public static function timeout<T>(promise:Promise<T>, ms:Int, timers:TimerManager, ?pos:PosInfos):Promise<T> {
-		return Future #if (tink_core >= "2") .irreversible #else .async #end(function(cb) {
+		return Future.irreversible(function(cb) {
 			var done = false;
 			var timer = null;
 			var link = promise.handle(function(o) {
